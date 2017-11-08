@@ -12,10 +12,16 @@ from seleniumlib.browser import DriverProperty
 class ElementProperty(DriverProperty):
     ''' input browser name and base url '''
 
-    def __init__(self, browser='chrome', baseurl=''):
-        ''' input URL '''
-        super().__init__(browser, baseurl)
-        super().open_browser()
+    def __init__(self, browser='chrome', baseurl = None, driver=None):
+        ''' input URL 
+        :type baseurl: str
+        :type driver: selenium.webdriver
+        '''
+        if baseurl != None:
+            super().__init__(browser, baseurl)
+            super().open_browser()
+        if driver != None:
+            self.driver = driver
         self.page_id = []
         self.elements = []
 
