@@ -25,6 +25,7 @@ class DriverProperty(object):
         """
         self.driver = None
         self.params = load_params()
+        self._open_browser()
         self.options = Options()
         self.options.add_argument("--ignore-certificate-errors")
         self.options.add_argument("--allow-running-insecure-content")
