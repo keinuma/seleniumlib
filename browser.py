@@ -3,22 +3,28 @@
 This code get browser information, set url
 """
 
+import os
+import json
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver import Chrome, Ie, Safari, Edge, Firefox
 from selenium.common.exceptions import WebDriverException, NoAlertPresentException
 from selenium.webdriver.chrome.options import Options
-from seleniumlib.config import BROWSER_NAME, BASE_URL
 
 
 class DriverProperty(object):
-    ''' making base driver for selenium.'''
+    """
+    selenium webdriverのラッパー
+    """
 
-    def __init__(self, browser_name=BROWSER_NAME,
-                 base_url=BASE_URL, headless=False):
-        ''' useful browser is chrome, ie, safari, edge, firefox '''
-        self.browser_name = browser_name
+    def __init__(self, headless=False):
+        """
+        :param
+        params['browser']: string: ブラウザ名
+        base_url: string: URL
+        headless: bool: ヘッドレスオプション
+        """
         self.driver = None
-        self.base_url = base_url
+        self.params = load_params()
         self.options = Options()
         self.options.add_argument("--ignore-certificate-errors")
         self.options.add_argument("--allow-running-insecure-content")
@@ -29,60 +35,96 @@ class DriverProperty(object):
             self.options.add_argument("--disable-desktop-notifications")
             self.options.add_argument("--disable-extensions")
 
-    def set_driver(self, browser_name=BROWSER_NAME, base_url=BASE_URL):
-        ''' if driver have value, driver close browser '''
-        self.browser_name = browser_name
-        self.base_url = base_url
-        self.open_browser()
+    def set_driver(self, driver=None):
+        """
+        driverの引き継ぎに使用する
+        :param driver: webdriver
+        :return:
+        """
+        self.driver = driver
+        return self
 
-    def open_browser(self):
-        ''' before extract this function, plese set self.browser_name '''
-        if self.browser_name == 'chrome':
+    def _open_browser(self):
+        """
+        :return webdriver:
+        """
+        if self.params['browser'] == 'chrome':
             self.driver = Chrome(chrome_options=self.options)
             self.driver = Chrome()
-        elif self.browser_name == 'ie':
+        elif self.params['browser'] == 'ie':
             self.driver = Ie()
-        elif self.browser_name == 'safari':
+        elif self.params['browser'] == 'safari':
             self.driver = Safari()
-        elif self.browser_name == 'edge':
+        elif self.params['browser'] == 'edge':
             self.driver = Edge()
-        elif self.browser_name == 'firefox':
+        elif self.params['browser'] == 'firefox':
             self.driver = Firefox()
         else:
             raise Exception('Faild input browser name')
-        self.driver.get(self.base_url)
+        self.driver.get(self.params['base_url'])
+        return self.driver
 
-    def visit(self, url=None):
-        ''' open args url or setted base url. '''
-        if url is None and self.base_url is None:
-            raise Exception('Plese input url.')
-        self.base_url = url
+    def visit(self, url):
+        """
+        :param url: string
+        :return: self
+        """
+        if url is None:
+            raise Exception('input url.')
         try:
-            self.driver.get(self.base_url)
+            self.driver.get(url)
         except WebDriverException:
             print('No such a url')
-        finally:
             self.driver.quit()
 
     def current_url(self):
-        ''' get current url '''
+        """
+        :return url: string
+        """
         return self.driver.current_url
 
     def close(self):
-        ''' close tab, not stop driver '''
+        """
+        driverはクローズしない
+        :return:
+        """
         self.driver.close()
 
     def refresh(self):
-        ''' reopen current url '''
+        """
+        現在のURLを開き直す
+        :return:
+        """
         self.driver.refresh()
 
     def authentication(self, user_name, pass_word):
-        ''' accept authenticate '''
+        """
+        ログイン認証を行う
+        :param user_name: string
+        :param pass_word: string
+        :return:
+        """
         self.driver.switch_to.alert.authenticate(user_name, pass_word)
 
     def accept(self):
-        ''' accept page aleart, example(This page is not safe) '''
+        """
+        警告を承認
+        :return:
+        """
         try:
             Alert(self.driver).accept()
         except NoAlertPresentException:
             pass
+
+
+def load_params():
+    """
+    :return: dict - driverクラスのインスタンス引数
+    """
+    list_dir = os.listdir('./')
+    if 'config.json' in list_dir:
+        with open('config.json') as f:
+            params = json.load(f)
+        return params
+    else:
+        return None
