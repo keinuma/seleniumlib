@@ -1,102 +1,124 @@
-'''
+"""
 2017/11/02 numata
 This code is find element in html.
 Save element and make actions.
-'''
+"""
 
 import time
 from PIL import Image
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.select import Select
-from seleniumlib.browser import DriverProperty
+from .browser import DriverProperty
 
 
 class ElementProperty(DriverProperty):
     """ input browser name and base url """
 
-    def __init__(self, browser='chrome', baseurl=None, driver=None,
-                 headless=False):
-        """ input URL
-        :type baseurl: str
-        :type driver: selenium.webdriver
+    def __init__(self, driver=None, headless=False):
         """
-        if baseurl is not None:
-            super().__init__(browser, baseurl, headless)
-            super().open_browser()
+        ウェブドライバーを作成するか、引き継ぐ
+        :param driver: selenium.webdriver
+        :param headless: bool : ヘッドレスオプション
+        """
+        if driver is None:
+            super().__init__(headless=headless)
+            super()._open_browser()
         elif driver is not None:
             self.driver = driver
         else:
-            raise ValueError("Input baseurl or driver")
-        self.page_id = []
-        self.elements = []
+            raise ValueError("Input driver")
+        self._page_id = []
+        self._elements = []
 
-    def get_elements(self, tag='input', remove=0, init=0):
+    def get_elements(self, tag='input', remove=False, init=0):
         """
-        arg detail
-        tag: select element tag (a, input, label)
-        remove: remove element saved
-        init: skip element
+        :param:tag: string select element tag(a, input, label)
+        :param:remove: bool remove element saved
+        :param:init: int skip element
         """
         try:
-            self.elements = self.driver.find_elements_by_css_selector(tag)
+            self._elements = self.driver.find__elements_by_css_selector(tag)
         except NoSuchElementException:
             print('No such a selector {}'.format(tag))
-            self.elements = []
+            self._elements = []
         else:
-            self.elements = self.elements[init:]
-            self.delete_unvisual()
+            self._elements = self._elements[init:]
+            self._delete_unvisual()
             # remove element saved in page id list
-            if remove == 1:
-                self.delete_registered()
-            self.update_page_id()
+            if remove:
+                self._delete_registered()
+            self._update_page_id()
 
     def push_elements(self, elem=0, word=None):
-        """ check send word is str """
+        """
+        elementsに対する操作を行う
+        :param elem: int elementsリストのindex
+        :param word: string 入力する文字列
+        :return:
+        """
         if not isinstance(elem, int):
-            raise Exception('Plese input int index')
+            raise Exception('Input int index')
         if word is None:
             ActionChains(
                 self.driver
             ).move_to_element(
-                self.elements[elem]
+                self._elements[elem]
             ).click(
-                self.elements[elem]
+                self._elements[elem]
             ).perform()
         elif isinstance(word, str):
-            self.elements[elem].send_keys(word)
+            self._elements[elem].send_keys(word)
         else:
-            raise Exception("Plese input string word(second arg)")
+            raise Exception("Input string word(second arg)")
 
     def select(self, elem=0, index=0):
-        """ operation select element """
-        select = Select(self.elements[elem])
+        """
+        プルダウンリストの選択
+        :param elem: int element listのindex
+        :param index: int プルダウンのindex
+        :return:
+        """
+        select = Select(self._elements[elem])
         select.select_by_index(index)
 
-    def delete_unvisual(self):
-        """ extract visuable element in html """
-        if isinstance(self.elements, list) is False:
+    def _delete_unvisual(self):
+        """
+        見えないelementを削除する
+        :return:
+        """
+        if isinstance(self._elements, list) is False:
             raise Exception('Input value is not list')
-        self.elements = [element
-                         for element in self.elements
-                         if element.is_displayed()]
+        self._elements = [element
+                          for element in self._elements
+                          if element.is_displayed()]
 
-    def update_page_id(self):
-        """ add input elements page id """
-        self.page_id += [element.id for element in self.elements]
+    def _update_page_id(self):
+        """
+        page_idに現在のelement listを追加する
+        :return:
+        """
+        self._page_id += [element.id for element in self._elements]
 
-    def delete_registered(self):
-        """ extract elements not include element id """
-        if isinstance(self.elements, list) is False:
+    def _delete_registered(self):
+        """
+        取得したelementからpage_idとの重複を削除する
+        :return:
+        """
+        if isinstance(self._elements, list) is False:
             raise Exception('Input value is not list')
-        self.elements = [element
-                         for element in self.elements
-                         if element.id not in self.page_id]
+        self._elements = [element
+                          for element in self._elements
+                          if element.id not in self._page_id]
 
     def print(self):
-        """ check html text is correct"""
-        for index, element in enumerate(self.elements):
-            print(index, element.text)
+        """
+        elementの文字列を取得する
+        :return:
+        """
+        out = 'index: {}, text: {}'
+        for index, element in enumerate(self._elements):
+            print(out.format(index, element.text))
 
     def save_screenshot(self, filename, fullsize=False):
         filepath = '/'.join(filename.split('/')[:-1])
@@ -124,7 +146,7 @@ class ElementProperty(DriverProperty):
             stitched_image = Image.new("RGB", (total_width, total_height))
 
             # スクロール操作用
-            scroll_width = 0
+            # scroll_width = 0
             scroll_height = 0
 
             row_count = 0
@@ -133,12 +155,12 @@ class ElementProperty(DriverProperty):
                 # 横スクロール初期化
                 col_count = 0
                 scroll_width = 0
-                self.driver.execute_script("window.scrollTo(%d, %d)" % (scroll_width, scroll_height)) 
+                self.driver.execute_script("window.scrollTo(%d, %d)" % (scroll_width, scroll_height))
                 # 横スクロールの処理
                 while scroll_width < total_width:
                     if col_count > 0:
                         # 画面サイズ分横スクロール
-                        self.driver.execute_script("window.scrollBy("+str(view_width)+",0)") 
+                        self.driver.execute_script("window.scrollBy(" + str(view_width) + ",0)")
 
                     tmpname = filepath + '/tmp_%d_%d.png' % (row_count, col_count)
                     self.driver.get_screenshot_as_file(tmpname)
@@ -147,7 +169,7 @@ class ElementProperty(DriverProperty):
                     # 右端か下端に到達したら画像を切り取ってstitched_imageに貼り付ける
                     if scroll_width + view_width >= total_width or scroll_height + view_height >= total_height:
                         new_width = view_width
-                        new_height= view_height
+                        new_height = view_height
                         if scroll_width + view_width >= total_width:
                             new_width = total_width - scroll_width
                         if scroll_height + view_height >= total_height:
