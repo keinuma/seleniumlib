@@ -1,3 +1,0 @@
-TIMEOUT = 0
-BROWSER_NAME = 'chrome'
-BASE_URL = ''
