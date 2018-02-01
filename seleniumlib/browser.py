@@ -18,14 +18,11 @@ class DriverProperty(object):
 
     def __init__(self, headless=False):
         """
-        :param
-        params['browser']: string: ブラウザ名
-        base_url: string: URL
-        headless: bool: ヘッドレスオプション
+        :param bool headless: ヘッドレスオプション
+        :return:
         """
         self.driver = None
         self.params = load_params()
-        self._open_browser()
         self.options = Options()
         self.options.add_argument("--ignore-certificate-errors")
         self.options.add_argument("--allow-running-insecure-content")
@@ -35,23 +32,26 @@ class DriverProperty(object):
             self.options.add_argument("--disable-gpu")
             self.options.add_argument("--disable-desktop-notifications")
             self.options.add_argument("--disable-extensions")
+        self._open_browser()
 
     def set_driver(self, driver=None):
         """
         driverの引き継ぎに使用する
-        :param driver: webdriver
-        :return:
+        :param selenium.webdriver driver: 引き継ぎ対象
+        :return: DriverProperty self
         """
         self.driver = driver
         return self
 
     def _open_browser(self):
         """
-        :return webdriver:
+        :return: webdriver
         """
         if self.params['browser'] == 'chrome':
-            self.driver = Chrome(chrome_options=self.options)
-            self.driver = Chrome()
+            if self.options is not None:
+                self.driver = Chrome(chrome_options=self.options)
+            else:
+                self.driver = Chrome()
         elif self.params['browser'] == 'ie':
             self.driver = Ie()
         elif self.params['browser'] == 'safari':
@@ -67,7 +67,7 @@ class DriverProperty(object):
 
     def visit(self, url):
         """
-        :param url: string
+        :param str url:
         :return: self
         """
         if url is None:
@@ -80,9 +80,9 @@ class DriverProperty(object):
 
     def current_url(self):
         """
-        :return url: string
+        :return: string
         """
-        return self.driver.current_url
+        return self.driver.current_url()
 
     def close(self):
         """
@@ -101,8 +101,8 @@ class DriverProperty(object):
     def authentication(self, user_name, pass_word):
         """
         ログイン認証を行う
-        :param user_name: string
-        :param pass_word: string
+        :param str user_name: ユーザ名
+        :param str pass_word: パスワード
         :return:
         """
         self.driver.switch_to.alert.authenticate(user_name, pass_word)
@@ -122,9 +122,11 @@ def load_params():
     """
     :return: dict - driverクラスのインスタンス引数
     """
-    list_dir = os.listdir('./')
+    config_dir = input('Please input json file directory: ')
+    list_dir = os.listdir(config_dir)
     if 'config.json' in list_dir:
-        with open('config.json') as f:
+        path = os.path.join(config_dir, 'config.json')
+        with open(path) as f:
             params = json.load(f)
         return params
     else:
