@@ -3,8 +3,6 @@
 This code get browser information, set url
 """
 
-import os
-import json
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver import Chrome, Ie, Safari, Edge, Firefox
 from selenium.common.exceptions import WebDriverException, NoAlertPresentException
@@ -16,13 +14,13 @@ class DriverProperty(object):
     selenium webdriverのラッパー
     """
 
-    def __init__(self, headless=False):
+    def __init__(self, base_url=None, headless=False, browser_name='chrome'):
         """
         :param bool headless: ヘッドレスオプション
         :return:
         """
         self.driver = None
-        self.params = load_params()
+        self.base_url = base_url
         self.options = Options()
         self.options.add_argument("--ignore-certificate-errors")
         self.options.add_argument("--allow-running-insecure-content")
@@ -32,7 +30,7 @@ class DriverProperty(object):
             self.options.add_argument("--disable-gpu")
             self.options.add_argument("--disable-desktop-notifications")
             self.options.add_argument("--disable-extensions")
-        self._open_browser()
+        self._open_browser(browser_name=browser_name.lower())
 
     def set_driver(self, driver=None):
         """
@@ -43,26 +41,26 @@ class DriverProperty(object):
         self.driver = driver
         return self
 
-    def _open_browser(self):
+    def _open_browser(self, browser_name):
         """
         :return: webdriver
         """
-        if self.params['browser'] == 'chrome':
+        if browser_name == 'chrome':
             if self.options is not None:
                 self.driver = Chrome(chrome_options=self.options)
             else:
                 self.driver = Chrome()
-        elif self.params['browser'] == 'ie':
+        elif browser_name == 'ie':
             self.driver = Ie()
-        elif self.params['browser'] == 'safari':
+        elif browser_name == 'safari':
             self.driver = Safari()
-        elif self.params['browser'] == 'edge':
+        elif browser_name == 'edge':
             self.driver = Edge()
-        elif self.params['browser'] == 'firefox':
+        elif browser_name == 'firefox':
             self.driver = Firefox()
         else:
             raise Exception('Faild input browser name')
-        self.driver.get(self.params['base_url'])
+        self.driver.get(self.base_url)
         return self.driver
 
     def visit(self, url):
@@ -117,17 +115,3 @@ class DriverProperty(object):
         except NoAlertPresentException:
             pass
 
-
-def load_params():
-    """
-    :return: dict - driverクラスのインスタンス引数
-    """
-    config_dir = input('Please input json file directory: ')
-    list_dir = os.listdir(config_dir)
-    if 'config.json' in list_dir:
-        path = os.path.join(config_dir, 'config.json')
-        with open(path) as f:
-            params = json.load(f)
-        return params
-    else:
-        return None

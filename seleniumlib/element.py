@@ -15,15 +15,14 @@ from .browser import DriverProperty
 class ElementProperty(DriverProperty):
     """ input browser name and base url """
 
-    def __init__(self, driver=None, headless=False):
+    def __init__(self, base_url=None, driver=None, headless=False):
         """
         ウェブドライバーを作成するか、引き継ぐ
         :param driver: selenium.webdriver
         :param headless: bool : ヘッドレスオプション
         """
         if driver is None:
-            super().__init__(headless=headless)
-            super()._open_browser()
+            super().__init__(base_url=base_url, headless=headless)
         elif driver is not None:
             self.driver = driver
         else:
@@ -57,6 +56,7 @@ class ElementProperty(DriverProperty):
         :param word: string 入力する文字列
         :return:
         """
+        print(type(elem))
         if not isinstance(elem, int):
             raise Exception('Input int index')
         if word is None:
