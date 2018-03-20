@@ -28,7 +28,7 @@ class ElementProperty(DriverProperty):
         else:
             raise ValueError("Input driver")
         self._page_id = []
-        self._elements = []
+        self.elements = []
 
     def get_elements(self, tag='input', remove=False, init=0):
         """
@@ -37,12 +37,12 @@ class ElementProperty(DriverProperty):
         :param:init: int skip element
         """
         try:
-            self._elements = self.driver.find__elements_by_css_selector(tag)
+            self.elements = self.driver.find_elements_by_css_selector(tag)
         except NoSuchElementException:
             print('No such a selector {}'.format(tag))
-            self._elements = []
+            self.elements = []
         else:
-            self._elements = self._elements[init:]
+            self.elements = self.elements[init:]
             self._delete_unvisual()
             # remove element saved in page id list
             if remove:
@@ -56,19 +56,18 @@ class ElementProperty(DriverProperty):
         :param word: string 入力する文字列
         :return:
         """
-        print(type(elem))
         if not isinstance(elem, int):
             raise Exception('Input int index')
         if word is None:
             ActionChains(
                 self.driver
             ).move_to_element(
-                self._elements[elem]
+                self.elements[elem]
             ).click(
-                self._elements[elem]
+                self.elements[elem]
             ).perform()
         elif isinstance(word, str):
-            self._elements[elem].send_keys(word)
+            self.elements[elem].send_keys(word)
         else:
             raise Exception("Input string word(second arg)")
 
@@ -79,7 +78,7 @@ class ElementProperty(DriverProperty):
         :param index: int プルダウンのindex
         :return:
         """
-        select = Select(self._elements[elem])
+        select = Select(self.elements[elem])
         select.select_by_index(index)
 
     def _delete_unvisual(self):
@@ -87,29 +86,29 @@ class ElementProperty(DriverProperty):
         見えないelementを削除する
         :return:
         """
-        if isinstance(self._elements, list) is False:
+        if isinstance(self.elements, list) is False:
             raise Exception('Input value is not list')
-        self._elements = [element
-                          for element in self._elements
-                          if element.is_displayed()]
+        self.elements = [element
+                         for element in self.elements
+                         if element.is_displayed()]
 
     def _update_page_id(self):
         """
         page_idに現在のelement listを追加する
         :return:
         """
-        self._page_id += [element.id for element in self._elements]
+        self._page_id += [element.id for element in self.elements]
 
     def _delete_registered(self):
         """
         取得したelementからpage_idとの重複を削除する
         :return:
         """
-        if isinstance(self._elements, list) is False:
+        if isinstance(self.elements, list) is False:
             raise Exception('Input value is not list')
-        self._elements = [element
-                          for element in self._elements
-                          if element.id not in self._page_id]
+        self.elements = [element
+                         for element in self.elements
+                         if element.id not in self._page_id]
 
     def print(self):
         """
@@ -117,7 +116,7 @@ class ElementProperty(DriverProperty):
         :return:
         """
         out = 'index: {}, text: {}'
-        for index, element in enumerate(self._elements):
+        for index, element in enumerate(self.elements):
             print(out.format(index, element.text))
 
     def save_screenshot(self, filename, fullsize=False):
