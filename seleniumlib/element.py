@@ -18,15 +18,15 @@ class ElementProperty(DriverProperty):
     def __init__(self, base_url=None, driver=None, headless=False):
         """
         ウェブドライバーを作成するか、引き継ぐ
-        :param driver: selenium.webdriver
-        :param headless: bool : ヘッドレスオプション
+        :param selenium.webdriver driver: ドライバー
+        :param bool headless: ヘッドレスオプション
         """
         if driver is None:
             super().__init__(base_url=base_url, headless=headless)
         elif driver is not None:
             self.driver = driver
         else:
-            raise ValueError("Input driver")
+            raise ValueError('Value Error because url or webdriver is not found.')
         self._page_id = []
         self.elements = []
 
@@ -59,13 +59,11 @@ class ElementProperty(DriverProperty):
         if not isinstance(elem, int):
             raise Exception('Input int index')
         if word is None:
-            ActionChains(
-                self.driver
-            ).move_to_element(
-                self.elements[elem]
-            ).click(
-                self.elements[elem]
-            ).perform()
+            actions = ActionChains(self.driver)
+            actions.move_to_element(self.elements[elem])
+            actions.click(self.elements[elem])
+            actions.perform()
+            actions.reset_actions()
         elif isinstance(word, str):
             self.elements[elem].send_keys(word)
         else:
@@ -78,6 +76,10 @@ class ElementProperty(DriverProperty):
         :param index: int プルダウンのindex
         :return:
         """
+        actions = ActionChains(self.driver)
+        actions.move_to_element(self.elements[elem])
+        actions.perform()
+        actions.reset_actions()
         select = Select(self.elements[elem])
         select.select_by_index(index)
 
@@ -112,7 +114,7 @@ class ElementProperty(DriverProperty):
 
     def print(self):
         """
-        elementの文字列を取得する
+        elementの文字列を標準出力する
         :return:
         """
         out = 'index: {}, text: {}'
